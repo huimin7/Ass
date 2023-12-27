@@ -184,7 +184,6 @@ public class Donation extends javax.swing.JFrame {
             String ngo=(String)Ngo.getSelectedItem();
             double donate= Integer.parseInt(amt)*90.0/100;
             int plusPoint=Integer.parseInt(amt)*10;
-            Database db=new Database();
 
             try (BufferedWriter writer = new BufferedWriter(new FileWriter("Donations.txt",true))) {
                 writer.write(user+" has donated $" + donate+" to "+ngo);
@@ -195,9 +194,8 @@ public class Donation extends javax.swing.JFrame {
             }
 
             int cPoint= Database.getCurrentPointForDonation(user);
-            
-            db.updatePointForDonation(user, plusPoint);
-            db.saveXp(user, plusPoint);
+            int newPoint = cPoint + plusPoint;
+            Database.updatePointForDonation(user,newPoint);
 
 
 

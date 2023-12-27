@@ -22,8 +22,8 @@ public class Leaderboard extends javax.swing.JFrame {
     }
 
     private void populateLeaderboard(){
-            
-        try(Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3308/user", "root", "");
+
+        try(Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3306/jdbc-user", "root", "");
             java.sql.Statement s=con.createStatement()){
 
             // Query to retrieve user details, XP, and current points
@@ -214,17 +214,93 @@ public class Leaderboard extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
 //    private javax.swing.JButton Back;
-
-
     private javax.swing.JLabel jLabel1;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JTable leaderboard;
     private javax.swing.JButton refresh;
-// End of variables declaration//GEN-END:variables
+    // End of variables declaration//GEN-END:variables
+}
 
-    
-    
+class saveXP {
+
+    public saveXP() {
+        Scanner sc=new Scanner(System.in);
+        System.out.println("Enter username: ");
+        String user=sc.next();
+        int cPoint=getCurrentPoint(user);
+        int newPoint=cPoint+20;//needmodify
+        int xp=getCurrentXp(user);
+        int newXp=xp+20;//need modify plus how much
+
+        saveXpCPoint(user,newPoint,newXp);
+        displayLeaderboard();
+    }
+
+    public static void saveXpCPoint(String username, int newPoint,int newXp){
+        try(Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3306/jdbc-user", "root", "")){
+            String query= "UPDATE user SET xp = ?,score=?, xpLastUpdate =CURRENT_TIMESTAMP WHERE username=?";
+            try(PreparedStatement preparedStatement = con.prepareStatement(query)){
+                preparedStatement.setInt(1,newXp);
+                preparedStatement.setInt(2,newPoint);
+                preparedStatement.setString(3,username);
+                preparedStatement.executeUpdate();
+            }
+
+            System.out.println("Point updated successfully");
+            System.out.println("Your current point: "+getCurrentPoint(username));
+        }catch(Exception e){
+            System.out.println(e.getMessage());
+        }
+    }
+
+    public static int getCurrentXp(String username){
+        int currentPoints=0;
+        try{
+            Connection con =DriverManager.getConnection("jdbc:mysql://localhost:3306/jdbc-user", "root", "");
+            String query="SELECT *FROM user WHERE username = ?";
+
+            try(PreparedStatement preparedStatement = con.prepareStatement(query)){
+                preparedStatement.setString(1, username);
+                try(ResultSet resultSet = preparedStatement.executeQuery()){
+                    if(resultSet.next()){
+                        currentPoints = resultSet.getInt("xp");
+
+                    }
+                }
+            }
+
+        }catch(Exception e){
+            System.out.println(e.getMessage());
+        }
+        return currentPoints;
+    }
+
+
+
+    public static int getCurrentPoint(String username){
+        int currentPoints=0;
+        try{
+            Connection con =DriverManager.getConnection("jdbc:MySQL://localhost:3308/user","root","");
+            String query="SELECT *FROM user WHERE username = ?";
+
+            try(PreparedStatement preparedStatement = con.prepareStatement(query)){
+                preparedStatement.setString(1, username);
+                try(ResultSet resultSet = preparedStatement.executeQuery()){
+                    if(resultSet.next()){
+                        currentPoints = resultSet.getInt("current_point");
+
+                    }
+                }
+            }
+
+        }catch(Exception e){
+            System.out.println(e.getMessage());
+        }
+        return currentPoints;
+    }
+
+
     public static void displayLeaderboard(){
         String query ="SELECT username, current_point, xp FROM user ORDER BY xp DESC, xpLastUpdate ASC";
         try(Connection con =DriverManager.getConnection("jdbc:MySQL://localhost:3308/user","root","");
@@ -246,72 +322,4 @@ public class Leaderboard extends javax.swing.JFrame {
             System.out.println(e.getMessage());
         }
     }
-}  
-
-
-
-//    public static void saveXpCPoint(String username, int newPoint,int newXp){
-//        try(Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3306/jdbc-user", "root", "")){
-//            String query= "UPDATE user SET xp = ?,score=?, xpLastUpdate =CURRENT_TIMESTAMP WHERE username=?";
-//            try(PreparedStatement preparedStatement = con.prepareStatement(query)){
-//                preparedStatement.setInt(1,newXp);
-//                preparedStatement.setInt(2,newPoint);
-//                preparedStatement.setString(3,username);
-//                preparedStatement.executeUpdate();
-//            }
-//
-//            System.out.println("Point updated successfully");
-//            System.out.println("Your current point: "+getCurrentPoint(username));
-//        }catch(Exception e){
-//            System.out.println(e.getMessage());
-//        }
-//    }
-
-//    public static int getCurrentXp(String username){
-//        int currentPoints=0;
-//        try{
-//            Connection con =DriverManager.getConnection("jdbc:mysql://localhost:3306/jdbc-user", "root", "");
-//            String query="SELECT *FROM user WHERE username = ?";
-//
-//            try(PreparedStatement preparedStatement = con.prepareStatement(query)){
-//                preparedStatement.setString(1, username);
-//                try(ResultSet resultSet = preparedStatement.executeQuery()){
-//                    if(resultSet.next()){
-//                        currentPoints = resultSet.getInt("xp");
-//
-//                    }
-//                }
-//            }
-//
-//        }catch(Exception e){
-//            System.out.println(e.getMessage());
-//        }
-//        return currentPoints;
-//    }
-
-
-
-//    public static int getCurrentPoint(String username){
-//        int currentPoints=0;
-//        try{
-//            Connection con =DriverManager.getConnection("jdbc:MySQL://localhost:3308/user","root","");
-//            String query="SELECT *FROM user WHERE username = ?";
-//
-//            try(PreparedStatement preparedStatement = con.prepareStatement(query)){
-//                preparedStatement.setString(1, username);
-//                try(ResultSet resultSet = preparedStatement.executeQuery()){
-//                    if(resultSet.next()){
-//                        currentPoints = resultSet.getInt("current_point");
-//
-//                    }
-//                }
-//            }
-//
-//        }catch(Exception e){
-//            System.out.println(e.getMessage());
-//        }
-//        return currentPoints;
-//    }
-
-
-
+}

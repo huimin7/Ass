@@ -9,7 +9,7 @@ public class Database {
     public Database() {
         try {
             // Connect to the database
-            conn = DriverManager.getConnection("jdbc:mysql://localhost:3308/user", "root", "");
+            conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/jdbc-user", "root", "");
 
             // Create a table for the users if it doesn't exist
             Statement stmt = conn.createStatement();
@@ -19,7 +19,7 @@ public class Database {
         }
     }
     public void updateScore(String email, int score) {
-        String query = "UPDATE user SET current_point = current_point + ? WHERE email = ?";
+        String query = "UPDATE users SET score = score + ? WHERE email = ?";
         try (PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setInt(1, score);
             stmt.setString(2, email);
@@ -28,101 +28,43 @@ public class Database {
             e.printStackTrace();
         }
     }
-    
-    
-    
 
-    public void updatePointForDonation(String username, int point){
-        
-        String query= "UPDATE user SET current_point = current_point + ? WHERE username=?";
-        try(PreparedStatement preparedStatement = conn.prepareStatement(query)){
-            preparedStatement.setInt(1,point);
-            preparedStatement.setString(2,username);
-            preparedStatement.executeUpdate();
+    public static void updatePointForDonation(String username, int newPoint){
+        try{
+            try(Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3306/jdbc-user", "root", "Lojiakeng87")){
+                String query= "UPDATE users SET score = ? WHERE username=?";
+                try(PreparedStatement preparedStatement = con.prepareStatement(query)){
+                    preparedStatement.setInt(1,newPoint);
+                    preparedStatement.setString(2,username);
+                    preparedStatement.executeUpdate();
+                }
+            }
+            System.out.println("Point updated successfully");
+            JOptionPane.showMessageDialog(null, "Thank you for your donation, your point updated!");
         }catch(Exception e){
             System.out.println(e.getMessage());
-        }    
-        
-        System.out.println("Point updated successfully");
-        JOptionPane.showMessageDialog(null, "Thank you for your donation, your point updated!");
-        
+        }
     }
 
     public int getScore(String email) {
-        String query = "SELECT current_point FROM user WHERE email = ?";
+        String query = "SELECT score FROM users WHERE email = ?";
         try (PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setString(1, email);
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
-                return rs.getInt("current_point");
+                return rs.getInt("score");
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
         return 0;
     }
-    
-    
-    public int getCurrentXp(String username){
-        int currentPoints=0;
-//        try{
-//            Connection con =DriverManager.getConnection("jdbc:mysql://localhost:3306/jdbc-user", "root", "");
-        String query="SELECT *FROM user WHERE username = ?";
-
-        try(PreparedStatement preparedStatement = conn.prepareStatement(query)){
-            preparedStatement.setString(1, username);
-            try(ResultSet resultSet = preparedStatement.executeQuery()){
-                if(resultSet.next()){
-                    currentPoints = resultSet.getInt("xp");
-                }
-            }
-       }catch(Exception e){
-            System.out.println(e.getMessage());
-        }
-        return currentPoints;
-    }
-    
-
-    
-    
-    public void saveXp(String username, int pluspoint){
-        int newXp =getCurrentXp(username)+pluspoint;
-//        try(Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3306/jdbc-user", "root", "")){
-            String query= "UPDATE user SET xp = ?,xpLastUpdate =CURRENT_TIMESTAMP WHERE username=?";
-            try(PreparedStatement preparedStatement = conn.prepareStatement(query)){
-                preparedStatement.setInt(1,newXp);
-                preparedStatement.setString(2,username);
-                preparedStatement.executeUpdate();
-            }catch(Exception e){
-            System.out.println(e.getMessage());
-        }
-
-            System.out.println("Point updated successfully");
-           
-    }
-    
-    public void saveXpUseEmail(String email, int point){
-//        try(Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3306/jdbc-user", "root", "")){
-            String query= "UPDATE user SET xp = ?,xpLastUpdate =CURRENT_TIMESTAMP WHERE email=?";
-            try(PreparedStatement preparedStatement = conn.prepareStatement(query)){
-                preparedStatement.setInt(1,point);
-                preparedStatement.setString(2,email);
-                preparedStatement.executeUpdate();
-            }catch(Exception e){
-            System.out.println(e.getMessage());
-
-            System.out.println("Point updated successfully");
-           
-        
-        }
-    }
-    
 
     public static int getCurrentPointForDonation(String username){
         int currentPoints=0;
         try{
-            Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3308/user", "root", "");
-            String query="SELECT *FROM user WHERE username = ?";
+            Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3306/jdbc-user", "root", "");
+            String query="SELECT *FROM users WHERE username = ?";
 
             try(PreparedStatement preparedStatement = con.prepareStatement(query)){
                 preparedStatement.setString(1, username);
@@ -142,7 +84,7 @@ public class Database {
 
 
     public LocalDate getRegistrationDate(String email) {
-        String query = "SELECT registration_date FROM user WHERE email = ?";
+        String query = "SELECT registration_date FROM users WHERE email = ?";
         try (PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setString(1, email);
             try (ResultSet rs = stmt.executeQuery()) {
@@ -178,12 +120,10 @@ public class Database {
             String cipherPassword = cipherText.toString();
 
             // Insert the user into the database
-            PreparedStatement pstmt = conn.prepareStatement("INSERT INTO user (username, email, password,registration_date) VALUES (?, ?, ?,?)");
-            LocalDate date=LocalDate.now();
+            PreparedStatement pstmt = conn.prepareStatement("INSERT INTO users (username, email, password) VALUES (?, ?, ?)");
             pstmt.setString(1, username);
             pstmt.setString(2, email);
-            pstmt.setString(3, cipherPassword);
-            pstmt.setDate(4,java.sql.Date.valueOf(date));// Store the ciphered password
+            pstmt.setString(3, cipherPassword);  // Store the ciphered password
             pstmt.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -236,14 +176,11 @@ public class Database {
 
         return 2;  // User doesn't exist
     }
-    
-    
-    
     public int checkIn(String email) {
 
             try {
                 // Get the last check-in date
-                PreparedStatement pstmt = conn.prepareStatement("SELECT last_checkin FROM user WHERE email = ?");
+                PreparedStatement pstmt = conn.prepareStatement("SELECT last_checkin FROM users WHERE email = ?");
                 pstmt.setString(1, email);
                 ResultSet rs = pstmt.executeQuery();
 
@@ -266,13 +203,13 @@ public class Database {
                         return 0;
                     } else {
                         // User hasn't checked in today, so increase the score and update the last check-in date
-                        PreparedStatement pstmtUpdate = conn.prepareStatement("UPDATE users SET score = score + 1, xp = xp + 1,last_checkin = ? WHERE email = ?");
+                        PreparedStatement pstmtUpdate = conn.prepareStatement("UPDATE users SET score = score + 1, last_checkin = ? WHERE email = ?");
                         pstmtUpdate.setDate(1, today);
                         pstmtUpdate.setString(2, email);
                         pstmtUpdate.executeUpdate();
 
                         // Get the new score
-                        pstmt = conn.prepareStatement("SELECT score FROM user WHERE email = ?");
+                        pstmt = conn.prepareStatement("SELECT score FROM users WHERE email = ?");
                         pstmt.setString(1, email);
                         rs = pstmt.executeQuery();
 
@@ -287,9 +224,6 @@ public class Database {
 
             return -1;
         }
-    
-    
-    
 }
 
 
