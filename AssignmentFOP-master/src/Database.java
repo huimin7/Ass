@@ -9,7 +9,7 @@ public class Database {
     public Database() {
         try {
             // Connect to the database
-            conn = DriverManager.getConnection("jdbc:mysql://localhost:3308/user", "root", "");
+            conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/user", "root", "");
 
             // Create a table for the users if it doesn't exist
             Statement stmt = conn.createStatement();
@@ -103,7 +103,7 @@ public class Database {
     
     public void saveXpUseEmail(String email, int point){
 //        try(Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3306/jdbc-user", "root", "")){
-            String query= "UPDATE user SET xp = ?,xpLastUpdate =CURRENT_TIMESTAMP WHERE email=?";
+            String query= "UPDATE users SET xp = ?,xpLastUpdate =CURRENT_TIMESTAMP WHERE email=?";
             try(PreparedStatement preparedStatement = conn.prepareStatement(query)){
                 preparedStatement.setInt(1,point);
                 preparedStatement.setString(2,email);
@@ -121,8 +121,8 @@ public class Database {
     public static int getCurrentPointForDonation(String username){
         int currentPoints=0;
         try{
-            Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3308/user", "root", "");
-            String query="SELECT *FROM user WHERE username = ?";
+            Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3306/jdbc-user", "root", "");
+            String query="SELECT *FROM users WHERE username = ?";
 
             try(PreparedStatement preparedStatement = con.prepareStatement(query)){
                 preparedStatement.setString(1, username);
@@ -142,7 +142,7 @@ public class Database {
 
 
     public LocalDate getRegistrationDate(String email) {
-        String query = "SELECT registration_date FROM user WHERE email = ?";
+        String query = "SELECT registration_date FROM users WHERE email = ?";
         try (PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setString(1, email);
             try (ResultSet rs = stmt.executeQuery()) {
